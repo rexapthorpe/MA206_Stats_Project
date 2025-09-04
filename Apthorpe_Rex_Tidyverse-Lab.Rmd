@@ -1,0 +1,401 @@
+---
+title: "MA206 Tidyverse Lab"
+author: "CDT Rex Apthorpe"
+date: Sys.Date()
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+# The Research Question
+
+How is a team's winning percentage affected by pass attempts, passing TDs, point differential, and turnover differential?
+
+# Summary of the Football Data Set 
+
+This dataset contains 128 rows of NFL team-season records from 2021–2024. For each team and year, it reports win–loss percentage, passing attempts, passing touchdowns, and whether the team’s point differential and turnover differential were positive or negative. It is clean, with no missing values, and well suited for analyzing how passing performance and differentials relate to winning.
+
+# The Data Set
+
+```{r}
+football_data = read_csv("correcteddataset.csv")
+head(football_data)
+```
+
+The output of the above code, in conjunction with any provided data dictionary, should enable you to complete the table below. Remove the information from the wage data set and use your own.
+
+<center>
+
+| Variable              | Column Name       | Units   | Variable Type |
+|----------------       |---------------    |---------|---------------|
+| Passing Attempts      | Pass Attempts     | N/A     | Quantitative  |
+| Passing TDs           | Pass TD           | N/A     | Quantitative  |
+| Point differential    | PtDif Pos or Neg  | Pos/Neg | Categorical   |
+| Turnover differential | TODif Pos or Neg  | Pos/Neg | Categorical   |
+
+
+</center>
+
+# Practice
+
+
+```{r}
+# call a variable
+football_data$`Pass Attempts`
+
+```
+
+```{r}
+# select a variable
+football_data %>%
+  dplyr::select(`Pass TD`) %>%
+
+    head()
+```
+
+```{r}
+# filter a variable by two values
+football_data %>%
+  dplyr::filter(`PtDif Pos or Neg` %in% c("Positive", "Negative")) %>%
+    head()
+
+```
+
+```{r}
+# summarize a variable
+football_data %>%
+  dplyr::summarize(
+    mean_pass_attempts = mean(`Pass Attempts`)
+  )
+
+```
+
+```{r}
+# group a variable by a categorical variable
+football_data %>%
+  dplyr::group_by(`PtDif Pos or Neg`) %>%
+  dplyr::summarize(
+    avg_pass_td     = mean(`Pass TD`),
+    avg_pass_attempts = mean(`Pass Attempts`),
+    n = dplyr::n()
+  ) %>%
+  dplyr::arrange(dplyr::desc(avg_pass_td))
+
+```
+
+```{r}
+# mutate a variable, using existing variables to create and name a new one
+football_data %>%
+  dplyr::mutate(
+    td_rate       = `Pass TD` / `Pass Attempts`,
+    td_per_100    = 100 * td_rate
+  ) %>%
+  dplyr::select(Season, Team, `Pass Attempts`, `Pass TD`, td_per_100) %>%
+  head()
+
+```
+
+
+------------------------------------------------------------------------
+
+# Explore Your Variables
+
+------------------------------------------------------------------------
+
+# Response Variable
+
+Win / Loss %
+description: proportion of games won to games lost
+units: NA
+```{r}
+# using quantitative variable techniques, create a summary table here
+football_data %>%
+  summarize(
+    mean_win_pct = mean(`W-L%`),
+    sd_win_pct   = sd(`W-L%`),
+    min_win_pct  = min(`W-L%`),
+    max_win_pct  = max(`W-L%`)
+  )
+
+
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+ggplot(football_data, aes(x = `W-L%`)) +
+  geom_histogram(binwidth = .1, fill = "blue", color = "white") +
+  labs(title = "Win-Loss Percentage distro",
+       x = "Win Percentage", y = "Team seasons")
+
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+ggplot(football_data, aes(x = "", y = `W-L%`)) +
+  geom_boxplot(outlier.alpha = 0.5, fill = "blue") +
+  stat_summary(fun = mean, geom = "point", shape = 21, size = 2, fill = "white") +
+  labs(title = "Boxplot of Team Win–Loss Percentage",
+       x = NULL, y = "Win–Loss %") +
+  theme_minimal()
+
+```
+
+Win–loss percentage varies meaningfully across teams and seasons with a clear mid-range concentration rather than a uniform spread. The histogram is preferable because it communicates the full shape and relative frequencies, whereas the boxplot mainly summarizes spread and outliers; next, I would test whether passing volume/efficiency explains the observed variation.
+
+
+
+# Quantitative Explantory Variable #1
+
+
+Pass Attempts, 
+description: The number of forward passes a team attempted during the season.
+Units: number of attempts
+
+```{r}
+# using quantitative variable techniques, create a summary table here. Replace
+# the 'dataframe' and 'variable' with your dataframe name and variable name
+
+football_data %>%
+  summarize(mean = mean(`Pass Attempts`),
+            s = sd(`Pass Attempts`),
+            n = n())
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+
+ggplot(football_data, aes(x = `Pass Attempts`)) +
+  geom_histogram(binwidth = 25, boundary = 0, closed = "left", color = "white") +
+  labs(title = "distro of Pass Attempts",
+       x = "Pass Attempts (count)",
+       y = "Number of Team-Seasons") +
+  theme_minimal()
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+
+ggplot(football_data, aes(x = `PtDif Pos or Neg`, y = `Pass Attempts`)) +
+  geom_boxplot(outlier.alpha = 0.5) +
+  labs(title = "pass Attempts by Point Differential Category",
+       x = "Point Differential (pos/neg)",
+       y = "Pass Attempts (count)") +
+  theme_minimal()
+
+
+```
+
+Pass attempts cluster in the mid-500s to 600s across most team-seasons, with a few higher-volume outliers above 650. The histogram is more effective because it shows the overall distribution across the league, while the boxplot mainly highlights differences between categories; a next step would be to examine whether higher passing volume correlates with win–loss percentage.
+
+
+
+# Quantitative Explantory Variable #2
+
+Pass TD
+description: Total number of passing touchdowns recorded by a team in a given season.
+units: N/A
+
+```{r}
+# using quantitative variable techniques, create a summary table here. Replace
+# the 'dataframe' and 'variable' with your dataframe name and variable name
+
+football_data %>%
+  dplyr::summarize(
+    mean = mean(`Pass TD`, na.rm = TRUE),
+    s    = sd(`Pass TD`, na.rm = TRUE),
+    n    = dplyr::n()
+  )
+
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+ggplot(football_data, aes(x = `Pass TD`)) +
+  geom_histogram(binwidth = 2, boundary = 0, closed = "left", fill = "blue", color = "white") +
+  labs(title = "Distribution of Passing Touchdowns",
+       x = "Passing Touchdowns (count)",
+       y = "Number of Team-Seasons") +
+  theme_minimal()
+
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+ggplot(football_data, aes(x = `TODif Pos or Neg`, y = `Pass TD`)) +
+  geom_boxplot(outlier.alpha = 0.5, fill = "blue") +
+  labs(title = "Passing Touchdowns by Turnover Differential",
+       x = "Turnover Differential (Positive/Negative)",
+       y = "Passing Touchdowns (count)") +
+  theme_minimal()
+```
+
+Passing touchdowns range from the mid-teens to upper 20s across teams, with most seasons clustering near 20–25. The histogram better illustrates the central tendency and overall spread, while the boxplot highlights only categorical comparisons; it raises the question of whether turnover differential systematically influences scoring efficiency.
+
+
+
+
+# Categorical Explanatory Variable #1
+
+Point Differential
+description: Whether a team’s season-long point differential was positive or negative.
+units: Positive/Negative
+
+```{r}
+# using categorical variable techniques, create a summary table here
+football_data %>%
+  dplyr::group_by(`PtDif Pos or Neg`) %>%
+  dplyr::summarize(
+    n = dplyr::n()
+  )
+
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+ggplot(football_data, aes(x = `PtDif Pos or Neg`)) +
+  geom_bar(fill = "blue") +
+  labs(title = "Count of Teams by Point Differential",
+       x = "Point Differential (Positive/Negative)",
+       y = "Number of Team-Seasons") +
+  theme_minimal()
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+ggplot(football_data, aes(x = `PtDif Pos or Neg`, fill = `TODif Pos or Neg`)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Point vs. Turnover Differential",
+       x = "Point Differential Category",
+       y = "Number of Team-Seasons",
+       fill = "Turnover Differential") +
+  theme_minimal()
+```
+
+Teams are split between positive and negative point differentials, with a slight imbalance favoring negative outcomes. The grouped bar chart is more effective because it reveals the relationship between point and turnover differential, whereas the single bar chart only shows counts; this raises the question of how strongly these two categorical variables interact with win percentage.
+
+
+
+
+
+
+# Categorical Explanatory Variable #2
+
+Turnover Diff Category
+description: Indicates whether a team’s season-long turnover differential was positive or negative.
+units: Pos/neg
+```{r}
+# using categorical variable techniques, create a summary table here
+football_data %>%
+  dplyr::group_by(`TODif Pos or Neg`) %>%
+  dplyr::summarize(
+    n = dplyr::n()
+  )
+
+
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+
+ggplot(football_data, aes(x = `TODif Pos or Neg`)) +
+  geom_bar(fill = "blue") +
+  labs(title = "Count of Teams by Turnover Differential",
+       x = "Turnover Differential (Positive/Negative)",
+       y = "Number of Team-Seasons") +
+  theme_minimal()
+
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+
+ggplot(football_data, aes(x = `TODif Pos or Neg`, fill = `PtDif Pos or Neg`)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Turnover vs. Point Differential",
+       x = "Turnover Differential Category",
+       y = "Number of Team-Seasons",
+       fill = "Point Differential") +
+  theme_minimal()
+```
+
+Turnover differential is relatively balanced across teams, though slightly more seasons fall into the negative category. The second visualization is more effective because it highlights how turnover differential interacts with point differential, raising questions about how these two categories together influence team success.
+
+
+
+# How are the variables associated?
+
+Using ggplot, create visualizations that show relationships between your variables below. Since you have five variables, you will need at minimum four plots so that each variable is visualized at least once. It is possible to display relationships between 3+ variables in one plot; at least one of your plots should demonstrate mastery of this skill. Create more code chunks as needed.
+
+```{r}
+# 1) W-L% vs Pass Attempts
+ggplot(football_data, aes(x = `Pass Attempts`, y = `W-L%`)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "Win–Loss % vs Pass Attempts",
+       x = "Pass Attempts (count)",
+       y = "Win–Loss Percentage")
+
+```
+
+
+```{r}
+
+# 2) W-L% vs Pass TD 
+ggplot(football_data, aes(x = `Pass TD`, y = `W-L%`)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "Win–Loss % vs Passing TDs",
+       x = "Passing TDs (count)",
+       y = "Win–Loss Percentage")
+
+```
+
+```{r}
+# 3) W-L% by Point Differential category
+ggplot(football_data, aes(x = `PtDif Pos or Neg`, y = `W-L%`)) +
+  geom_boxplot(outlier.alpha = 0.5) +
+  labs(title = "Win–Loss % by Point Differential",
+       x = "Point Differential (Positive/Negative)",
+       y = "Win–Loss Percentage")
+
+```
+
+
+```{r}
+ggplot(football_data,
+       aes(x = `Pass Attempts`, y = `Pass TD`,
+           color = `PtDif Pos or Neg`, size = `W-L%`)) +
+  geom_point(alpha = 0.8) +
+  facet_wrap(~ `TODif Pos or Neg`) +
+  scale_size_continuous(range = c(2, 6)) +
+  labs(title = "Passing Volume & TDs by Differential Categories",
+       subtitle = "Color = Point Differential, Facet = Turnover Differential, Size = Win–Loss %",
+       x = "Pass Attempts (count)",
+       y = "Passing TDs (count)",
+       color = "Point Diff",
+       size  = "Win–Loss %")
+
+```
+
+------------------------------------------------------------------------
+
+# Finish the tutorial
+
+------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------
+
+# Getting Ready to Submit!
+
+------------------------------------------------------------------------
+
+Now that you're done, you need to save this file (if the title is red, it has unsaved changes). RStudio does NOT autosave while you work, so CTRL+S early and often. Next, press the `Knit` button up top with the yarn icon. This will create an HTML file, because that was specified in the header. Save your HTML file with the name `Lastname_Firstname_Tidyverse-Lab.html`. Then, open the HTML file and print, using the ``Microsoft Print to PDF" option to save as `Lastname_Firstname_Tidyverse-Lab.pdf`. This PDF file is what you will submit on Canvas for Milestone 2.
