@@ -1,5 +1,4 @@
 ---
-Test
 title: "MA206 Tidyverse Lab"
 author: "CDT Rex Apthorpe"
 date: Sys.Date()
@@ -401,3 +400,4 @@ ggplot(football_data,
 
 
 Now that you're done, you need to save this file (if the title is red, it has unsaved changes). RStudio does NOT autosave while you work, so CTRL+S early and often. Next, press the `Knit` button up top with the yarn icon. This will create an HTML file, because that was specified in the header. Save your HTML file with the name `Lastname_Firstname_Tidyverse-Lab.html`. Then, open the HTML file and print, using the ``Microsoft Print to PDF" option to save as `Lastname_Firstname_Tidyverse-Lab.pdf`. This PDF file is what you will submit on Canvas for Milestone 2.
+
