@@ -1,0 +1,363 @@
+---
+title: "MA206 Tidyverse Lab"
+author: "CDT Alexander Ngo"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Save This File
+
+Save this .Rmd file with the title `Lastname_Firstname_Tidyverse-Lab.Rmd` into your RStudio folder.
+
+# Importing Libraries
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+# The Research Question
+
+Over the last 4 NFL seasons (2021-2024), how has a team's win percentage been impacted by pass attempts, passing touchdowns, point differential, and turnover differential?
+
+# Summary of the Teams' Win Percentage Data Set 
+
+This data set contains all 32 NFL teams' win percentages during the 2021, 2022, 2023, and 2024 NFL seasons as well as their number of pass attempts, number of passing touchdowns, positive or negative point differential, and positive or negative turnover differential. In general, teams with >20 passing touchdowns, a positive point differential, and a positive turnover differential won more often than other teams, while passing attempts seem to have a varied effect on teams' win percentages.
+
+# The Data Set
+
+Name and load your data set below.
+
+```{r}
+nfl= read.csv("correcteddataset.csv")
+head(nfl)
+```
+
+The output of the above code, in conjunction with any provided data dictionary, should enable you to complete the table below. Remove the information from the wage data set and use your own.
+
+<center>
+
+| Variable       | Column Name      | Units   | Variable Type |
+|----------------|------------------|---------|---------------|
+| Pass Attempts  | Pass.Attempts    | N/A     | Quantitative  |
+| Pass Touchdowns| Pass.TD          | N/A     | Quantitative  |
+| Pt Differential| PtDif.Pos.or.Neg | N/A     | Categorical   |
+| TO Differential| TODif.Pos.or.Neg | N/A     | Categorical   |
+
+</center>
+
+# Practice
+
+Use the below space to practice calling, selecting, filtering, summarizing, grouping by, and mutating variables.
+
+```{r}
+# call a variable
+nfl$Pass.Attempts
+
+```
+
+```{r}
+# select a variable
+nfl %>% 
+  select(Pass.TD)
+
+```
+
+```{r}
+# filter a variable by two values
+nfl %>% 
+  filter(Pass.TD<20,Pass.TD>15)
+```
+
+```{r}
+# summarize a variable
+nfl %>% 
+  summarize(Mean_Pass.Attempts=mean(Pass.Attempts))
+```
+
+```{r}
+# group a variable by a categorical variable
+nfl %>% 
+  group_by(PtDif.Pos.or.Neg) %>% 
+  summarize(Mean_Pass.Attempts=mean(Pass.Attempts),
+            Median_Pass.Attempts=median(Pass.Attempts),
+            size=n())
+```
+
+```{r}
+# mutate a variable, using existing variables to create and name a new one
+nfl %>% 
+  mutate(PassAttPerTD=Pass.Attempts / Pass.TD) %>% 
+  select(Pass.Attempts, Pass.TD, PassAttPerTD)
+```
+
+
+------------------------------------------------------------------------
+
+# Explore Your Variables
+
+------------------------------------------------------------------------
+
+# Response Variable
+
+Name: Win-Loss Percentage (W.L.)
+Description: A team's wins divided by total number of games (17), shown as a percentage
+Units: Percentage
+
+```{r}
+# using quantitative variable techniques, create a summary table here
+nfl %>% 
+  summarize(Median_WL=median(W.L.),
+            Mean_WL=mean(W.L.),
+            SD_WL=sd(W.L.))
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+nfl %>% 
+  ggplot(aes(x = W.L.)) +
+  geom_histogram() +
+  labs(x = "Win-Loss Percentage", y = "Count", title = "Histogram of Win-Loss Percentages")
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+
+WL_PosPtDif=nfl %>% 
+  filter(PtDif.Pos.or.Neg=="Positive")
+WL_PosPtDif %>% 
+  ggplot(aes(x = W.L.)) +
+  geom_histogram() +
+  labs(x = "Win-Loss Percentage", y = "Count", title = "Histogram of Win-Loss Percentages")
+
+```
+
+In 1-2 sentences, describe this variable's data. Which visualization is better, and why? Are there any questions that you have after exploring? Add code chunks below if you'd like to do some more exploration.
+
+The data for win percentage ranges from 0.0 (a fully losing season) to 0.9, with most teams near the middle (0.3-0.7).The first plot shows all the win-loss percentages of all 128 data points. The second plot shows the win-loss percentages of only teams that had a positive point differential. For the purposes of exploring all the data, the first one is better because it includes every data point. However, it is definitely interesting to see how the explanatory variables impact the response variable: for teams with a positive point differential, the lowest win-loss percentage was around 0.40. This is obviously to be expected because a team will perform better if they score more points than they are scored on, however it brings up questions such as if a negative point differential has the same effect but for lower-performing teams.
+
+# Quantitative Explantory Variable #1
+
+Type the name, description, and units of your quantitative variable here. 
+Name: Pass.Attempts
+Description: How many passes a team attempts
+Units: N/A
+```{r}
+# using quantitative variable techniques, create a summary table here. Replace
+# the 'dataframe' and 'variable' with your dataframe name and variable name
+
+nfl %>%
+  summarize(mean = mean(Pass.Attempts),
+            s = sd(Pass.Attempts),
+            n = n())
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+nfl %>% 
+  ggplot(aes(x = Pass.Attempts)) +
+  geom_histogram() +
+  labs(x = "Pass Attempts", y = "Count", title = "Histogram of Pass Attempts")
+
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+PA_NegTODif=nfl %>% 
+  filter(TODif.Pos.or.Neg=="Positive")
+PA_NegTODif %>% 
+  ggplot(aes(x = Pass.Attempts)) +
+  geom_histogram() +
+  labs(x = "Pass Attempts", y = "Count", title = "Histogram of Pass Attempts")
+```
+
+In 1-2 sentences, describe this variable's data. Which visualization is better, and why? Are there any questions that you have after exploring? Add code chunks below if you'd like to do some more exploration.
+
+The data for pass attempts ranges from around 350-750, with the majority being between 500-600. The first visualization is better for understanding all teams' pass attempts but the second is better for understanding it in the context of a negative turnover differential. However, the two plots are similar, which raises the question of how much the other variables impact pass attempts (and vice versa).
+
+# Quantitative Explantory Variable #2
+
+Type the name, description, and units of your quantitative variable here. 
+Name: Pass.TD
+Description: Team's passing touchdowns for a season
+Units: N/A
+```{r}
+# using quantitative variable techniques, create a summary table here. Replace
+# the 'dataframe' and 'variable' with your dataframe name and variable name
+
+nfl %>%
+  summarize(mean = mean(Pass.TD),
+            s = sd(Pass.TD),
+            n = n())
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+nfl %>% 
+  ggplot(aes(x = Pass.TD)) +
+  geom_histogram() +
+  labs(x = "Pass TDs", y = "Count", title = "Histogram of Pass TDs")
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+TD20_30=nfl %>% 
+  filter(Pass.TD>20,Pass.TD<30)
+TD20_30 %>% 
+  ggplot(aes(x = Pass.TD)) +
+  geom_histogram() +
+  labs(x = "Pass TDs", y = "Count", title = "Histogram of Pass TDs between 20 and 30")
+```
+
+In 1-2 sentences, describe this variable's data. Which visualization is better, and why? Are there any questions that you have after exploring? Add code chunks below if you'd like to do some more exploration.
+
+The number of passing TDs for a team ranged from about 10 to over 40, with the plurality being between 20 and 0. The first visualization shows all 128 data points, while the second only shows the count for teams who scored between 20-30 passing TDs. The first would be better for a holistic analysis while the second would be better for focusing on a significant portion of the data (especially because these teams are likely to be around 0.500 win percentage). This raises the question of how much passing TDs affects win percentage.
+
+# Categorical Explanatory Variable #1
+
+Type the name, description, and units of your categorical variable here. Remember that this will require different code than your quantitative variables.
+Name: PtDif.Pos.or.Neg
+Description: Whether a team scored more points than were scored on them (positive) or vice versa (negative)
+Units: N/A (positive or negative)
+
+```{r}
+# using categorical variable techniques, create a summary table here
+nfl %>% 
+  count(PtDif.Pos.or.Neg=="Positive")
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+nfl %>% 
+  ggplot(aes(x = W.L., fill = PtDif.Pos.or.Neg)) +
+  geom_histogram(position = "dodge") +
+  labs(x = "Win-Loss Percentage", y = "Count", title = "Histogram of Win-Loss Percentage dependent on Point Differential")
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+nfl %>% 
+  ggplot(aes(x = Pass.Attempts, fill = PtDif.Pos.or.Neg)) +
+  geom_histogram(position = "dodge") +
+  labs(x = "Pass Attempts", y = "Count", title = "Histogram of Pass Attempts dependent on Point Differential")
+```
+
+In 1-2 sentences, describe this variable's data. Which visualization is better, and why? Are there any questions that you have after exploring? Add code chunks below if you'd like to do some more exploration.
+
+Slightly less than half of teams had a positive point differential while slightly more than half had a negative point differential. The first visualization plots win percentage with point differential, which makes it obvious that a positive point differential results in better team performances. The second visualization plots pass attempts with point differential, which shows the varied effect of point differential on pass attempts. The first is better because it clearly shows a correlation between point differential and win percentage. This raises the question of how point differential impacts other stats, such as passing TDs or turnover differential.
+
+# Categorical Explanatory Variable #2
+
+Type the name, description, and units of your categorical variable here. Remember that this will require different code than your quantitative variables.
+Name: TODif.Pos.or.Neg
+Description: Whether a team forced more turnovers than they committed (positive) or vice versa (negative)
+Units: N/A (positive or negative)
+```{r}
+# using categorical variable techniques, create a summary table here
+nfl %>% 
+  count(TODif.Pos.or.Neg=="Positive")
+```
+
+```{r}
+# using ggplot, create a visualization that shows the behavior of this variable here
+nfl %>% 
+  ggplot(aes(x = W.L., fill = TODif.Pos.or.Neg)) +
+  geom_histogram(position = "dodge") +
+  labs(x = "Win-Loss Percentage", y = "Count", title = "Histogram of Win-Loss Percentage dependent on Turnover Differential")
+```
+
+```{r}
+# using ggplot, create a second visualization that shows a different aspect of this variable
+nfl %>% 
+  ggplot(aes(x = Pass.TD, fill = TODif.Pos.or.Neg)) +
+  geom_histogram(position = "dodge") +
+  labs(x = "Pass TDs", y = "Count", title = "Histogram of Pass TDs dependent on Turnover Differential")
+```
+
+In 1-2 sentences, describe this variable's data. Which visualization is better, and why? Are there any questions that you have after exploring? Add code chunks below if you'd like to do some more exploration.
+
+Slightly more than half of teams have a positive TO differential while slightly less than half of teams have a negative TO differential. The first plot shows how a positive TO differential strongly correlates with a higher win percentage, while the second plot shows how a positive TO differential is moderately correlates with more passing TDs. Both plots are good because they confirm what intuition would suggest. This raises the question of if turnovers only correlate with these statistics or if they are a cause as well.
+
+# How are the variables associated?
+
+Using ggplot, create visualizations that show relationships between your variables below. Since you have five variables, you will need at minimum four plots so that each variable is visualized at least once. It is possible to display relationships between 3+ variables in one plot; at least one of your plots should demonstrate mastery of this skill. Create more code chunks as needed.
+
+```{r}
+#This plot (3+ variables) shows the relationship between passing TDs and win percentage divided by point differential. The data clearly shows that a team with point differential and passing TDs are both positively associated with win percentage.
+nfl %>% 
+  group_by(Pass.TD, PtDif.Pos.or.Neg) %>% 
+  summarize(Median=median(W.L.)) %>% 
+  ggplot(aes(x=Pass.TD, y=Median, color=PtDif.Pos.or.Neg))+geom_line()+
+  labs(x="Pass TDs", y="Win-Loss Percentage",color="Point Differential", title="Pass TDs vs Win-Loss Percentage by Point Differential") +
+  theme_bw()
+```
+```{r}
+# This plot shows win percentage against pass attempts with respect to turnover differential. The data is chaotic, implying pass attempts has little correlation with win percentage.
+nfl %>% 
+  group_by(Pass.Attempts, TODif.Pos.or.Neg) %>% 
+  summarize(Median=median(W.L.)) %>% 
+  ggplot(aes(x=Pass.Attempts, y=Median, color=TODif.Pos.or.Neg))+geom_line()+
+  labs(x="Pass Attempts", y="Win-Loss Percentage",color="TO Differential", title="Pass Attempts vs Win-Loss Percentage by Turnover Differential") +
+  theme_bw()
+
+```
+
+```{r}
+# This plot shows pass TDs against pass attempts. This clearly shows that when a team passes more, they are more likely to score passing TDs (as one would expect).
+nfl %>% 
+  group_by(Pass.Attempts) %>% 
+  summarize(Median=median(Pass.TD)) %>% 
+  ggplot(aes(x=Pass.Attempts, y=Median))+geom_line()+
+  labs(x="Pass Attempts", y="Pass TDs", title="Pass Attempts vs Pass TDs") +
+  theme_bw()
+
+```
+
+```{r}
+# This plot shows pass attempts with respect to turnover differential. For the most part, pass attempts does not correlate with turnover differential, whereas I expected more pass attempts to correlate with a negative turnover differential because passing more can lead to more interceptions.
+nfl %>% 
+  ggplot(aes(x = Pass.Attempts, fill = TODif.Pos.or.Neg)) +
+  geom_histogram(position = "dodge") +
+  labs(x = "Pass Attempts", y = "Count", title = "Histogram of Pass Attempts dependent on Turnover Differential")
+
+```
+
+------------------------------------------------------------------------
+
+# Finish the tutorial
+
+------------------------------------------------------------------------
+
+Test your skills by working through the code after the `ggplot` section of the Tutorial. These examples will help you gain a basic understanding of what is happening with specific commands or data structures within R, which will be useful to you over the course of the semester. Create more code chunks as needed.
+
+```{r}
+x=c(5, 10, 15, 20)
+y=c(5, 10, 15, NA)
+mean(x)
+mean(y)
+```
+```{r}
+mean(x,na.rm=T)
+x %>% mean(na.rm=T)
+```
+```{r}
+ls()
+rm(x)
+ls()
+```
+
+
+
+
+------------------------------------------------------------------------
+
+# Getting Ready to Submit!
+
+------------------------------------------------------------------------
+
+Now that you're done, you need to save this file (if the title is red, it has unsaved changes). RStudio does NOT autosave while you work, so CTRL+S early and often. Next, press the `Knit` button up top with the yarn icon. This will create an HTML file, because that was specified in the header. Save your HTML file with the name `Lastname_Firstname_Tidyverse-Lab.html`. Then, open the HTML file and print, using the ``Microsoft Print to PDF" option to save as `Lastname_Firstname_Tidyverse-Lab.pdf`. This PDF file is what you will submit on Canvas for Milestone 2.
