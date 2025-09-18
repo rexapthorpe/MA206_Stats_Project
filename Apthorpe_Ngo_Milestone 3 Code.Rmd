@@ -1,0 +1,230 @@
+---
+title: "Milestone 3"
+author: "CDT Rex Apthorpe, CDT Alex Ngo"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Considerations for Milestone 3
+
+When creating your introduction and data section for Milestone 3, you'll be using your work from the Tidyverse Lab and Milestone 2. Understandably, when working with a new skill there is uncertainty about expectations. To clear that up, this example will explore two variables (one categorical, one quantitative) from the ``Diamonds`` dataset, which does not require uploading a dataset. First, we need to load our libraries. In addition to ``Tidyverse`` and ``Janitor``, we need to add ``ggplot2``, which will enable the use of the ``Diamonds`` dataset. This is done in lines 19-20.
+
+```{r libraries}
+library(tidyverse)
+library(janitor)
+install.packages("ggplot2")
+library(ggplot2)
+```
+
+## Dataset Overview
+
+
+
+```{r dataset}
+diamonds
+```
+
+We can see that this is a very large dataset with 10 variables and 53,940 observations. The observational units are each of the 53,940 individual diamonds measured. We have 3 categorical variables: `cut`, `color`, `clarity`; the rest are quantitative. Some of these variable seem self explanatory, but some are confusing. For this reason, data sections often include a data dictionary, or a table describing the variables, like the one below. Notice how much easier it is to make sense of the data with this to reference.
+
+
+| Variable | Description | Units | Variable Type | Values       |
+|:---------|:------------|:------|:--------------|:-------------|
+| price    | Price                          | USD     | Quantitative  | $326-$18,823 |
+| carat    | Carat Weight                   | carats  | Quantitative  | 0.2-5.01     |
+| cut      | Quality of Cut                 | N/A     | Categorical   | Fair, Good, <br>Very Good, Premium, <br>Ideal |
+| color    | Diamond Color                  | N/A     | Categorical   | J (worst) to D (best) |
+| clarity  | Diamond Clarity                | N/A     | Categorical   | I1 (cloudiest, worst), <br>SI2, SI1, VS2, VVS2, <br>VVS1, IF (clearest, best) |
+| x        | Length in mm                   | N/A     | Quantitative  | 0-10.74      |
+| y        | Width in mm                    | N/A     | Quantitative  | 0-58.9       |
+| z        | Depth in mm                    | N/A     | Quantitative  | 0-31.8       |
+| depth    | Total Depth <br>Percentage     | N/A     | Quantitative  | 43-79        |
+| table    | Width Relative <br>to Widest Point | N/A | Quantitative  | 43-95        |
+
+
+## Writing a Research Question
+
+Once we've identified the variables we want to use, we can create our research question. For this dataset, let's assume we want to predict `price`, and are using the explanatory variables of `carat`, (primary explanatory variable) `cut`,  and `depth` to do so. Our research question should take the following format:
+
+Does `primary explanatory variable` have an association with `response variable`, after accounting for `explanatory variable 2` and `explanatory variable 3`?
+
+For this example, we will ask: Does carat weight have an association with diamond price, after accounting for the cut and total depth percentage of the diamond?
+
+## Exploring a Categorical Variable
+
+We will explore the cut of the diamonds. The Course Guide provides the following code for creating a summary statistics table:
+
+dataframe %>%
+  tabyl(variable) %>% 
+  adorn_totals()
+  
+```{r}
+diamonds %>%
+  tabyl(cut) %>% 
+  adorn_totals()
+```
+
+We will not use a screenshot of this in our technical report, but can turn it into a professionally-formatted table in Word or using the technique from above.
+
+To visualize a categorical variable, our primary choice will be a bar graph. This code also comes directly from the Course Guide:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=cut)) +
+  geom_bar()
+```
+
+This is an okay plot, but would result in points reduction because it does not have formatted title or axis labels. The Tidyverse Tutorial showed us how to add those:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=cut)) +
+  geom_bar() +
+  labs(x = "Cut of Diamond", y = "Count", title = "Bar Graph of Diamond Cuts")
+```
+
+This is not only better formatted, but much more informative. We can clearly see that the dataset is unbalanced, with many mid-to-high-quality diamonds and few that are low-quality.
+
+## Exploring a Quantitative Variable
+
+We will explore the carat weight of the diamonds. The Course Guide provides the following code for creating a summary statistics table:
+
+dataframe %>%
+  summarize(mean = mean(variable),
+            s = sd(variable),
+            n = n())
+            
+```{r}
+diamonds %>%
+  summarize(mean = mean(carat),
+            s = sd(carat),
+            n = n())
+```
+
+Remember to format this nicely for your report and, when coding, to leave the parentheses empty for the calculation of `n`.
+
+To visualize a quantitative variable, our primary choice will be a histogram, displaying the frequency of occurrence within the dataset for the range of values. This code also comes directly from the Course Guide; remember to format appropriately.
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat)) + 
+  geom_histogram() +
+  labs(x = "Diamond Carat Weight", y = "Count", title = "Histogram of Carat Weights within Diamonds Dataset")
+```
+
+See that we got a message suggesting our bin width may not be great. Let's try a different size:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat)) + 
+  geom_histogram(binwidth = 10) +
+  labs(x = "Diamond Carat Weight", y = "Count", title = "Histogram of Carat Weights within Diamonds Dataset")
+```
+
+Definitely not! Sometimes we need some trial and error.
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat)) + 
+  geom_histogram(binwidth = 0.125) +
+  labs(x = "Diamond Carat Weight", y = "Count", title = "Histogram of Carat Weights within Diamonds Dataset")
+```
+
+Once we settle on a visualization that looks like it clearly communicates what's in the dataset, we can use that for the report and we don't need the earlier versions anymore. The better organized your project code is, the less likely you are to get confused later in the project.
+
+## Creating Visualizations with Multiple Variables
+
+The bar plot and histogram above are informative but simple. The Tidyverse Tutorial gave us other techniques we can use to visualize relationships within the data. 
+
+# Two Categorical Variables
+
+If we are to compare two categorical variables, such as `cut` and `color`, we could try one of these options from the Tidyverse Tutorial and Course Guide:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=cut, fill = color)) +
+  geom_bar(position = position_fill()) +
+  labs(x = "Diamond Cut", y = "Count", title = "Bar Plot of Diamond Cuts by Color")
+```
+
+```{r}
+diamonds %>% 
+  select(cut, color) %>% 
+  table() %>% 
+  plot()
+```
+
+# One Categorical Variable vs. One Quantitative Variable
+
+Let's use `cut` and `price` for this example:
+
+```{r}
+diamonds %>% 
+  ggplot(aes(x = price, y = cut)) +
+  geom_boxplot() +
+  labs(x = "Price", y = "Diamond Cut", title = "Box Plot of Diamond Price by Cut")
+```
+
+A box plot shows the relative distributions among the groups. We can also do this with a split histogram:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x=price)) + 
+  geom_histogram() +
+  facet_grid(cut~.) +
+  labs(x = "Diamond Cut", y = "Count", title = "Bar Plot of Diamond Cuts by Color")
+```
+
+What do you think of this bin width? Would you keep it, or try for something better?
+
+# Two Quantitative Variables
+
+The primary method of plotting two quantitative variables, like `price` and `carat`, is a scatter plot. Since `price` is our response variable, we will choose to plot it on the Y-axis.
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat, y = price)) +
+  geom_point() +
+  labs(x = "Carat Weight", y = "Diamond Price", title = "Diamond Price vs. Carat Weight")
+```
+
+What do you notice? 
+
+# Adding More Variables to a Visualization
+
+While we don't want to clutter visualizations, we can sometimes add more information without detracting from communication. Take a look at this:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat, y = price, color = color)) +
+  geom_point() +
+  labs(x = "Carat Weight", y = "Diamond Price", title = "Diamond Price vs. Carat Weight")
+```
+
+Does that make the visualization better or worse?
+
+What about this?
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat, y = price)) +
+  geom_point() +
+  facet_wrap(~color)
+  labs(x = "Carat Weight", y = "Diamond Price", title = "Diamond Price vs. Carat Weight")
+```
+Or this:
+
+```{r}
+diamonds %>%
+  ggplot(aes(x = carat, y = price)) +
+  geom_point(aes(alpha = 0.25), position = "jitter") +
+  labs(x = "Carat Weight", y = "Diamond Price", title = "Diamond Price vs. Carat Weight")
+```
+
+
+Ultimately, you will have to experiment with your data and identify which plots are best for communicating with your readers. It takes some trial and error, and generally we suggest using 3-5 visualizations in your report. If there are additional visualizations or tables that you feel are important for the reader's understanding, these can be displayed in your Appendix A. If you have any questions, feel free to ask your instructor and to use the knit HTML or .Rmd from this code. If used, be sure to cite them!
+
+
